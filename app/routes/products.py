@@ -1,8 +1,9 @@
 import os
 import uuid
+from pathlib import Path
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import List
 from ..database import get_db
 from ..models.product import Product
 from ..schemas.product import ProductCreate, ProductUpdate, ProductResponse
@@ -10,7 +11,9 @@ from ..auth.jwt import get_current_admin
 
 router = APIRouter(prefix="/api/products", tags=["Products"])
 
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "uploads")
+# Resolves to project root: app/routes/products.py -> app/routes -> app -> /app/uploads
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+UPLOAD_DIR = BASE_DIR / "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
@@ -76,7 +79,7 @@ def upload_image(
     if ext not in [".jpg", ".jpeg", ".png", ".gif", ".webp"]:
         raise HTTPException(status_code=400, detail="Only image files (jpg, png, gif, webp) are allowed")
     filename = f"{uuid.uuid4().hex}{ext}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
+    filepath = UPLOAD_DIR / filename
     with open(filepath, "wb") as f:
         f.write(file.file.read())
     return {"url": f"/uploads/{filename}", "filename": filename}

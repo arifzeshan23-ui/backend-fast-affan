@@ -1,9 +1,18 @@
 import os
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .database import engine, Base
-from .routes import auth_router, products_router, cart_router, wishlist_router, orders_router, admin_router, categories_router
+from .routes import (
+    auth_router,
+    products_router,
+    cart_router,
+    wishlist_router,
+    orders_router,
+    admin_router,
+    categories_router,
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,8 +32,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+# Resolves to project root: app/main.py -> app -> /app/uploads
+BASE_DIR = Path(__file__).resolve().parent.parent
+UPLOAD_DIR = BASE_DIR / "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 app.include_router(auth_router)
